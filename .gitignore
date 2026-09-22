@@ -1,0 +1,20 @@
+# This repo holds ONLY the setup (scripts, workflows, docs).
+# The actual ComfyUI install, models, venv and caches live elsewhere and are huge —
+# never commit them.
+/ComfyUI/
+/venv/
+*.gguf
+*.safetensors
+*.ckpt
+*.pt
+*.bin
+*.png
+*.jpg
+__pycache__/
+*.pyc
+*.log
+
+# never commit secrets
+.env
+*token*
+*.key
