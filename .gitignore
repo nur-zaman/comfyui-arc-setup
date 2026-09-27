@@ -1,6 +1,4 @@
-# This repo holds ONLY the setup (scripts, workflows, docs).
-# The actual ComfyUI install, models, venv and caches live elsewhere and are huge —
-# never commit them.
+# ComfyUI, the venv and model weights are installed by install.ps1, not committed
 /ComfyUI/
 /venv/
 *.gguf
@@ -14,7 +12,6 @@ __pycache__/
 *.pyc
 *.log
 
-# never commit secrets
 .env
 *token*
 *.key

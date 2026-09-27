@@ -1,79 +1,149 @@
-# ComfyUI — Intel Arc B580 + Qwen-Image-2.1 (GGUF)
+<div align="center">
 
-A reproducible setup for running **Qwen-Image-2.1** (text-to-image, image-edit and
-img2img) on an **Intel Arc B580** (Battlemage, 12 GB) via **native PyTorch XPU** —
-no IPEX, no CUDA. Everything is quantized GGUF so it fits in 12 GB.
+<img src="https://github.com/intel.png?size=120" height="72" alt="Intel" />
+&nbsp;&nbsp;&nbsp;
+<img src="https://github.com/Comfy-Org.png?size=120" height="72" alt="ComfyUI" />
+&nbsp;&nbsp;&nbsp;
+<img src="https://github.com/QwenLM.png?size=120" height="72" alt="Qwen" />
 
-## What's in this repo
+# Qwen-Image-2.1 on Intel Arc B580
 
-| File | Purpose |
-|------|---------|
-| `install.ps1` | One-shot installer — clones ComfyUI, venv, torch-xpu, nodes, downloads models, fixes the GGUF, drops in launcher + workflows |
-| `run_comfyui.bat` | Arc-tuned launcher (reserves VRAM, opens the browser) |
-| `fix_gguf_arch.py` | Injects the `qwen_image` architecture tag the GGUF is missing |
-| `workflows/*.json` | Ready-to-use ComfyUI workflows |
+**Local text-to-image and image editing in ComfyUI on a 12 GB Intel Arc card, installed with one script.**
 
-## Fresh install (new machine / after a wipe)
+[![Intel Arc B580](https://img.shields.io/badge/Intel_Arc-B580_12GB-0071C5?style=for-the-badge&logo=intel&logoColor=white)](https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html)
+[![PyTorch XPU](https://img.shields.io/badge/PyTorch-XPU-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/docs/stable/notes/get_start_xpu.html)
+[![ComfyUI](https://img.shields.io/badge/ComfyUI-GGUF-172117?style=for-the-badge)](https://github.com/comfyanonymous/ComfyUI)
+[![Qwen-Image-2.1](https://img.shields.io/badge/Qwen--Image-2.1-615CED?style=for-the-badge&logo=huggingface&logoColor=white)](https://huggingface.co/Qwen/Qwen-Image-2.1)
+[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=for-the-badge)](#-requirements)
 
-Requirements: **git** and **Python 3.13** (`py -3.13` must work).
+</div>
+
+---
+
+This guide sets up **Qwen-Image-2.1** with native **PyTorch XPU**. You don't need IPEX, CUDA or WSL. The diffusion model is a GGUF quantization, so it fits in the B580's 12 GB of VRAM alongside your desktop.
+
+- **Text-to-image** at square, portrait and landscape sizes
+- **Instruction-based editing**: describe the change you want in plain words
+- **Image-to-image** restyling
+- **Arc-tuned launcher** that avoids the VRAM-starvation BSOD
+
+## Requirements
+
+| | |
+|---|---|
+| **GPU** | Intel Arc B580. Other Arc cards should work but are untested. |
+| **Driver** | Latest [Intel Arc graphics driver](https://www.intel.com/content/www/us/en/download/785597/intel-arc-iris-xe-graphics-windows.html) |
+| **Software** | [Git](https://git-scm.com/download/win) and [Python 3.13](https://www.python.org/downloads/) (`py -3.13 --version` must work) |
+| **Disk** | About 35 GB free (16 GB of models, plus PyTorch and caches) |
+
+## Quick start
 
 ```powershell
-git clone <this-repo> comfyui-arc-setup
+git clone https://github.com/<you>/comfyui-arc-setup.git
 cd comfyui-arc-setup
-$env:HF_TOKEN = "hf_xxxxxxxx"      # your Hugging Face token — never commit it
-./install.ps1                       # defaults: installs to E:\ComfyUI, Q6_K quant
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-Options: `./install.ps1 -ComfyRoot D:\ComfyUI -Quant Q8_0`
-(quants: `Q4_0 Q4_K_M Q5_K_M Q6_K Q8_0` — bigger = better quality, more VRAM).
+Then launch:
 
-When it finishes, launch with `E:\ComfyUI\run_comfyui.bat`.
+```powershell
+<drive>:\ComfyUI\run_comfyui.bat
+```
 
-## Starting ComfyUI
+ComfyUI opens at <http://127.0.0.1:8188>. Open the **Workflows** sidebar, pick one, and press **Run**.
 
-Double-click **`run_comfyui.bat`**. It:
-- reserves 2 GB VRAM for the Windows desktop (the B580 also drives your display),
-- uses PyTorch cross-attention (Arc has no flash-attn/xformers),
-- persists compiled GPU kernels for fast warm starts,
-- opens <http://127.0.0.1:8188> in your browser automatically.
+> [!NOTE]
+> The first image is slow because the GPU kernels are compiling. They're cached on disk, so later runs and restarts are much faster.
 
-## Why the Arc-specific flags matter
+<details>
+<summary><b>⚙️ Installer options</b></summary>
 
-The B580 renders your **desktop** *and* runs the **compute**. If ComfyUI grabs all
-12 GB VRAM during sampling it starves the display driver → **BSOD (`0x7E`)**. The
-launcher's `--reserve-vram 2.0` prevents that. If you ever push very large images and
-see instability, raise it to `3.0` and/or add `--lowvram` in `run_comfyui.bat`.
+<br>
 
-## Models (installed by the script)
+| Option | Default | Description |
+|---|---|---|
+| `-ComfyRoot` | `<repo drive>:\ComfyUI` | Where ComfyUI, the venv and the models go |
+| `-CacheRoot` | `comfy-cache`, next to `ComfyRoot` | pip, temp and compiled-kernel caches (kept off `C:`) |
+| `-Quant` | `Q6_K` | `Q3_K_M` · `Q4_K_M` · `Q5_K_M` · `Q6_K` · `Q8_0`. Larger quants give better quality and use more VRAM |
+| `-HfToken` | `$env:HF_TOKEN` | Optional Hugging Face token, if you hit download rate limits |
 
-| Component | File | Folder |
-|-----------|------|--------|
-| Diffusion (GGUF) | `qwen-image-2.1-Q6_K.gguf` (5.88 GB) | `models/diffusion_models` |
-| Text encoder | `qwen3vl_8b_int8_convrot.safetensors` (9.35 GB) | `models/text_encoders` |
-| VAE | `qwen_image_2.1_vae_bf16.safetensors` (0.68 GB) | `models/vae` |
+```powershell
+.\install.ps1 -ComfyRoot D:\ComfyUI -Quant Q8_0
+```
 
-Source: <https://huggingface.co/KasugaiSakura/Qwen-Image-2.1-Uncensored-GGUF>
+You can re-run the script safely. It skips anything that's already installed or downloaded.
+
+</details>
+
+## What gets installed
+
+1. [**ComfyUI**](https://github.com/comfyanonymous/ComfyUI) in a Python 3.13 venv
+2. **PyTorch** from the official XPU wheel index
+3. The custom nodes [**ComfyUI-GGUF**](https://github.com/city96/ComfyUI-GGUF) and [**ComfyUI-Manager**](https://github.com/ltdrdata/ComfyUI-Manager)
+4. The models:
+
+   | Component | File | Size | Source |
+   |---|---|---|---|
+   | Diffusion model | `qwen-image-2.1-Q6_K.gguf` | 6.3 GB | [unsloth/Qwen-Image-2.1-GGUF](https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF) |
+   | Text encoder | `qwen3vl_8b_int8_convrot.safetensors` | 9.4 GB | [Comfy-Org/Qwen-Image-2.1](https://huggingface.co/Comfy-Org/Qwen-Image-2.1) |
+   | VAE | `qwen_image_2.1_vae_bf16.safetensors` | 0.7 GB | [Comfy-Org/Qwen-Image-2.1](https://huggingface.co/Comfy-Org/Qwen-Image-2.1) |
+
+5. A small patch that adds the GGUF's missing architecture tag (`fix_gguf_arch.py`)
+6. The Arc launcher and the ready-made workflows
 
 ## Workflows
 
-Loadable from the **Workflows** sidebar in ComfyUI:
+| Workflow | Use it for |
+|---|---|
+| **Qwen T2I - Square 1024** | Standard 1024×1024 text-to-image. ⭐ Start here. |
+| **Qwen T2I - Portrait 896x1152** | Tall images |
+| **Qwen T2I - Landscape 1152x896** | Wide images |
+| **Qwen T2I - Fast Draft 768** | Quick low-step previews for iterating on a prompt |
+| **Qwen Image Edit** | Load an image and describe the change you want |
+| **Qwen Image-to-Image** | Restyle an existing image |
 
-- **Qwen T2I – Square 1024** — the standard 1 MP text-to-image (validated stable).
-- **Qwen T2I – Portrait 896×1152** / **Landscape 1152×896** — aspect-ratio variants.
-- **Qwen T2I – Fast Draft 768** — low steps, quick previews.
-- **Qwen Image Edit** — instruction-based editing: load an image, describe the change.
-- **Qwen Image-to-Image** — restyle an input image (denoise strength controls how much).
+> [!TIP]
+> - **Leave CFG at 1.** That's the model's intended setting. Raise it only if you add a negative prompt.
+> - **Steps:** 20–25 is a good default. Go up to 40–50 for maximum quality.
+> - **Resolution:** around 1 megapixel (1024×1024) is the safe maximum on 12 GB.
+> - **Editing:** keep denoise at `1.0` and write the prompt as an instruction, for example *"change the background to a snowy forest, keep the subject unchanged"*.
+> - **Img2img:** denoise controls how much changes. `0.4–0.7` keeps most of the original.
 
-### Key settings
-- **cfg = 1** is the official Qwen-Image-2.1 path. Only raise it if you use a negative prompt.
-- **steps**: 25 is a good default; the official pipeline uses up to ~40–50 for max quality.
-- **1024×1024 is the safe resolution.** For 2K, enable `--lowvram` first.
-- For editing, keep denoise = 1 and phrase the prompt as an instruction
-  (e.g. *"change the background to a snowy forest, keep the subject unchanged"*).
-- For img2img, lower **denoise** (0.4–0.7) keeps more of the original.
+## Why the launcher matters
 
-## Reproducibility notes
+> [!WARNING]
+> The B580 renders your Windows desktop and runs ComfyUI at the same time. If ComfyUI takes all 12 GB during sampling, the display driver runs out of memory and Windows can crash with **BSOD `0x7E`**.
 
-This repo intentionally does **not** contain ComfyUI, the venv, or the multi-GB model
-weights (see `.gitignore`) — `install.ps1` fetches them. Your Hugging Face token is read
-from `$env:HF_TOKEN`, never stored, so this repo is safe to push.
+`run_comfyui.bat` prevents that and tunes ComfyUI for Arc:
+
+| Setting | Purpose |
+|---|---|
+| `--reserve-vram 2.0` | Keeps 2 GB of VRAM free for the desktop |
+| `--use-pytorch-cross-attention` | Arc doesn't support flash-attn or xformers |
+| `SYCL_CACHE_PERSISTENT=1` | Caches compiled GPU kernels so later starts are faster |
+| `PYTORCH_ENABLE_XPU_FALLBACK=1` | Runs ops that don't have an XPU kernel yet on the CPU instead of crashing |
+
+Any extra arguments go to ComfyUI, for example `run_comfyui.bat --lowvram`.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| BSOD or display freeze while generating | Raise `--reserve-vram` to `3.0` in `run_comfyui.bat`, or launch with `--lowvram` |
+| Out of memory at high resolution | Launch with `--lowvram`, or reinstall with a smaller quant (`-Quant Q4_K_M`) |
+| `Unknown model architecture!` | Run `venv\Scripts\python.exe fix_gguf_arch.py <path-to.gguf>` on the model |
+| `py -3.13` not found | Install Python 3.13 from python.org with the **py launcher** option ticked |
+| Script blocked by execution policy | Run it with `powershell -ExecutionPolicy Bypass -File .\install.ps1` |
+| Workflow shows a missing model | Pick your installed `.gguf` in the **Unet Loader (GGUF)** node |
+
+
+This repo only contains the setup. ComfyUI, the venv and the model weights are downloaded by the installer and never committed.
+
+## Credits
+
+- [Qwen-Image](https://huggingface.co/Qwen/Qwen-Image-2.1) by the Qwen team at Alibaba
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and the [Comfy-Org](https://huggingface.co/Comfy-Org/Qwen-Image-2.1) model repackages
+- [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) by city96
+- GGUF quantizations by [Unsloth](https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF)
+
+<sub>This is a community project. It isn't affiliated with or endorsed by Intel, Alibaba, Comfy Org or Unsloth. All logos and trademarks belong to their owners.</sub>
