@@ -14,7 +14,13 @@
 [![PyTorch XPU](https://img.shields.io/badge/PyTorch-XPU-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/docs/stable/notes/get_start_xpu.html)
 [![ComfyUI](https://img.shields.io/badge/ComfyUI-GGUF-172117?style=for-the-badge)](https://github.com/comfyanonymous/ComfyUI)
 [![Qwen-Image-2.1](https://img.shields.io/badge/Qwen--Image-2.1-615CED?style=for-the-badge&logo=huggingface&logoColor=white)](https://huggingface.co/Qwen/Qwen-Image-2.1)
-[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=for-the-badge)](#-requirements)
+[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=for-the-badge)](#requirements)
+
+<br>
+
+<img src="docs/images/portraits.jpg" alt="Four photorealistic iPhone Portrait mode style photos generated with Qwen-Image-2.1 on an Intel Arc B580" width="100%" />
+
+<sub>All four were generated on the B580 with the <b>Portrait 896x1152</b> workflow in this repo. See <a href="#workflows">the prompts</a>.</sub>
 
 </div>
 
@@ -22,7 +28,7 @@
 
 This guide sets up **Qwen-Image-2.1** with native **PyTorch XPU**. You don't need IPEX, CUDA or WSL. The diffusion model is a GGUF quantization, so it fits in the B580's 12 GB of VRAM alongside your desktop.
 
-- **Text-to-image** at square, portrait and landscape sizes
+- **Text-to-image** at square, portrait and landscape sizes, about **a minute per 1024×1024 image**
 - **Instruction-based editing**: describe the change you want in plain words
 - **Image-to-image** restyling
 - **Arc-tuned launcher** that avoids the VRAM-starvation BSOD
@@ -33,13 +39,14 @@ This guide sets up **Qwen-Image-2.1** with native **PyTorch XPU**. You don't nee
 |---|---|
 | **GPU** | Intel Arc B580. Other Arc cards should work but are untested. |
 | **Driver** | Latest [Intel Arc graphics driver](https://www.intel.com/content/www/us/en/download/785597/intel-arc-iris-xe-graphics-windows.html) |
+| **RAM** | 32 GB. ComfyUI moves the 9 GB text encoder and the 6 GB diffusion model between VRAM and system RAM on every new prompt, and its process peaks at around 27 GB. Close browsers and game launchers while you generate. |
 | **Software** | [Git](https://git-scm.com/download/win) and [Python 3.13](https://www.python.org/downloads/) (`py -3.13 --version` must work) |
 | **Disk** | About 35 GB free (16 GB of models, plus PyTorch and caches) |
 
 ## Quick start
 
 ```powershell
-git clone https://github.com/<you>/comfyui-arc-setup.git
+git clone https://github.com/nur-zaman/comfyui-arc-setup.git
 cd comfyui-arc-setup
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
@@ -102,12 +109,66 @@ You can re-run the script safely. It skips anything that's already installed or 
 | **Qwen Image Edit** | Load an image and describe the change you want |
 | **Qwen Image-to-Image** | Restyle an existing image |
 
+<details>
+<summary><b>Prompts for the portraits at the top</b></summary>
+
+<br>
+
+All four use **Qwen T2I - Portrait 896x1152** with its default settings (25 steps, euler / simple, CFG 1). Each took about a minute on the B580. The trick is to name the phone look: *"iPhone portrait mode photo of …, background softly blurred with portrait mode bokeh, sharp focus on the eyes, true-to-life colors"*.
+
+| | Seed | Prompt |
+|---|---|---|
+| Café window | 12001 | iPhone 15 Pro portrait mode photo of a woman in her late twenties sitting by a cafe window, soft natural daylight on her face, relaxed genuine smile, wearing a cream knit sweater, background softly blurred with portrait mode bokeh, sharp focus on the eyes, true-to-life skin tones, natural colors, shot at eye level. |
+| Golden hour | 12002 | iPhone portrait mode photo of a young man with curly hair standing on a city sidewalk at golden hour, warm sunlight from the side, denim jacket, calm confident expression, shops and traffic blurred behind him with smooth portrait mode background blur, crisp detail in the hair and eyes, natural colors, casual photo taken by a friend. |
+| Garden bench | 12003 | iPhone portrait mode photo of a smiling grandfather with a white beard sitting on a garden bench, overcast soft light, wearing a checked shirt, green leaves and flowers blurred in the background, sharp focus on his face and kind eyes, natural skin texture, true-to-life colors, candid family photo. |
+| Beach breeze | 12004 | iPhone portrait mode photo of a woman with long dark hair at the beach in the late afternoon, gentle breeze moving her hair, white linen shirt, soft warm light, the sea and sky smoothly blurred behind her, sharp focus on her face, natural colors, relaxed happy expression, vacation photo. |
+
+To regenerate them, start ComfyUI and run `python benchmark\bench.py --cases benchmark\portraits.json --out portraits.json`.
+
+</details>
+
 > [!TIP]
 > - **Leave CFG at 1.** That's the model's intended setting. Raise it only if you add a negative prompt.
 > - **Steps:** 20–25 is a good default. Go up to 40–50 for maximum quality.
 > - **Resolution:** around 1 megapixel (1024×1024) is the safe maximum on 12 GB.
 > - **Editing:** keep denoise at `1.0` and write the prompt as an instruction, for example *"change the background to a snowy forest, keep the subject unchanged"*.
 > - **Img2img:** denoise controls how much changes. `0.4–0.7` keeps most of the original.
+
+## Benchmarks
+
+<img src="docs/images/benchmark.jpg" alt="Benchmark chart: seconds per image for each workflow on the Intel Arc B580" width="100%" />
+
+Wall-clock time per image with the stock workflows in `workflows/`, each run with a new prompt after the models were loaded once. The time includes text encoding and moving the text encoder and diffusion model in and out of the 12 GB of VRAM.
+
+| Workflow | Size | Steps | New prompt | Reroll seed | Sampler | Peak VRAM |
+|---|---|---|---|---|---|---|
+| Fast Draft 768 | 768×768 | 14 | 29 s | 21 s | 1.46 s/it | 9.9 GB |
+| Square 1024 | 1024×1024 | 25 | 58 s | 53 s | 1.95 s/it | 9.4 GB |
+| Portrait | 896×1152 | 25 | 57 s | | 1.89 s/it | 9.5 GB |
+| Landscape | 1152×896 | 25 | 59 s | | 1.94 s/it | 9.8 GB |
+| Image Edit | 1024×1024 | 20 | 58 s | | 2.26 s/it | 9.8 GB |
+| Image-to-Image | 1024×1024 | 20, denoise 0.6 | 46 s | | 1.90 s/it | 9.4 GB |
+
+- **First image after launch:** 126 s, because about 16 GB of weights load from disk.
+- **Reroll seed** means the same prompt with a new seed. ComfyUI reuses the cached text encoding, so the time is almost all sampling.
+- **Peak VRAM** is what PyTorch reserved. The launcher keeps a further 2 GB free for the desktop.
+
+<details>
+<summary><b>Test system and how to reproduce</b></summary>
+
+<br>
+
+Intel Arc B580 12 GB (driver 32.0.101.8801) · Ryzen 5 7600 · 32 GB DDR5 · Windows 11 · PyTorch 2.14.0+xpu · ComfyUI 0.37.0 · `qwen-image-2.1-Q6_K.gguf` · `qwen3vl_8b_int8_convrot` text encoder · euler / simple · CFG 1. Launched with the stock `run_comfyui.bat`.
+
+Start ComfyUI with the launcher, then run:
+
+```powershell
+python benchmark\bench.py
+```
+
+The script loads each workflow from `workflows/` unchanged, swaps in the prompts and seeds from `benchmark/cases.json`, and writes timings to `benchmark/results.json`. It uses only the Python standard library. Pass `--server-log <file>` with ComfyUI's console output redirected to that file, and it also records the sampler's s/it.
+
+</details>
 
 ## Why the launcher matters
 
@@ -131,6 +192,7 @@ Any extra arguments go to ComfyUI, for example `run_comfyui.bat --lowvram`.
 |---|---|
 | BSOD or display freeze while generating | Raise `--reserve-vram` to `3.0` in `run_comfyui.bat`, or launch with `--lowvram` |
 | Out of memory at high resolution | Launch with `--lowvram`, or reinstall with a smaller quant (`-Quant Q4_K_M`) |
+| ComfyUI closes with `Windows fatal exception: access violation`, or fails with `DefaultCPUAllocator: not enough memory`, when you change the prompt | System RAM ran out while the models were being swapped. Close browsers, Steam, Discord and so on, or restart ComfyUI to clear its cache. See [Requirements](#requirements). |
 | `Unknown model architecture!` | Run `venv\Scripts\python.exe fix_gguf_arch.py <path-to.gguf>` on the model |
 | `py -3.13` not found | Install Python 3.13 from python.org with the **py launcher** option ticked |
 | Script blocked by execution policy | Run it with `powershell -ExecutionPolicy Bypass -File .\install.ps1` |

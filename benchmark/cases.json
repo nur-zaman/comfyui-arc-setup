@@ -1,0 +1,46 @@
+[
+  {
+    "name": "cold_square",
+    "workflow": "Qwen T2I - Square 1024",
+    "prompt": "Unedited iPhone photo of a golden retriever shaking off water on a muddy lake shore, spray of droplets frozen mid-air, its head smeared with motion blur, overcast sky blown out to pure white, slightly soft focus, a blurry fingertip intruding in the top left corner, crooked horizon, visible sensor noise in the shadows, casual snapshot.",
+    "seed": 1001
+  },
+  {
+    "name": "square",
+    "workflow": "Qwen T2I - Square 1024",
+    "prompt": "Candid iPhone photo taken at a late night ramen shop counter, a young man laughing with chopsticks raised, harsh overhead fluorescent light with a green cast, steam partially fogging the frame, motion blur on his hand, greasy lens smudge making the lights bloom, visible noise, slightly tilted framing, a phone photo someone would post to their close friends story.",
+    "seed": 3003, "repeat_seed": true
+  },
+  {
+    "name": "portrait",
+    "workflow": "Qwen T2I - Portrait 896x1152",
+    "prompt": "iPhone night mode photo of a small birthday party in a cramped apartment kitchen, a woman leaning in to blow out candles on a supermarket cake, friends around her lit warm by the candles, ghosting on people who moved, smeary noise reduction in the dark corners, mixed warm and cool light, cluttered counter with soda bottles and paper plates, slightly out of focus, real unposed moment.",
+    "seed": 4004
+  },
+  {
+    "name": "landscape",
+    "workflow": "Qwen T2I - Landscape 1152x896",
+    "prompt": "iPhone photo taken through a dirty city bus window at golden hour, a busy street with rickshaws and shop signs outside, reflections of passengers faintly visible in the glass, raindrop marks and grime on the window, a long lens flare streak from the low sun, crushed shadows and blown highlights, slight motion blur from the moving bus, JPEG artifacts.",
+    "seed": 5005
+  },
+  {
+    "name": "draft",
+    "workflow": "Qwen T2I - Fast Draft 768",
+    "prompt": "iPhone photo of a yellow sticky note on a white fridge door, handwritten in blue ballpoint pen: \"buy milk & call mom!!\", held up by a pizza delivery magnet, harsh glare from a kitchen window across the top of the frame, slight hand shake blur, JPEG compression, casual phone snapshot.",
+    "seed": 2002, "repeat_seed": true
+  },
+  {
+    "name": "edit",
+    "workflow": "Qwen Image Edit",
+    "input_from": "draft",
+    "prompt": "Change the handwritten text on the sticky note to \"B580 go brrr\", same blue ballpoint handwriting, keep the note, magnet, fridge, glare and everything else exactly the same.",
+    "seed": 9009
+  },
+  {
+    "name": "img2img",
+    "workflow": "Qwen Image-to-Image",
+    "input_from": "cold_square",
+    "prompt": "A 1990s disposable camera flash photo of a golden retriever shaking off water at a lake, Fujifilm color, heavy film grain, light leak on the edge, orange date stamp in the corner reading '98 7 14.",
+    "seed": 1111
+  }
+]

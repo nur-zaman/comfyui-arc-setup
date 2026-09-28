@@ -1,0 +1,26 @@
+[
+  {
+    "name": "portrait_cafe",
+    "workflow": "Qwen T2I - Portrait 896x1152",
+    "prompt": "iPhone 15 Pro portrait mode photo of a woman in her late twenties sitting by a cafe window, soft natural daylight on her face, relaxed genuine smile, wearing a cream knit sweater, background softly blurred with portrait mode bokeh, sharp focus on the eyes, true-to-life skin tones, natural colors, shot at eye level.",
+    "seed": 12001
+  },
+  {
+    "name": "portrait_street",
+    "workflow": "Qwen T2I - Portrait 896x1152",
+    "prompt": "iPhone portrait mode photo of a young man with curly hair standing on a city sidewalk at golden hour, warm sunlight from the side, denim jacket, calm confident expression, shops and traffic blurred behind him with smooth portrait mode background blur, crisp detail in the hair and eyes, natural colors, casual photo taken by a friend.",
+    "seed": 12002
+  },
+  {
+    "name": "portrait_grandpa",
+    "workflow": "Qwen T2I - Portrait 896x1152",
+    "prompt": "iPhone portrait mode photo of a smiling grandfather with a white beard sitting on a garden bench, overcast soft light, wearing a checked shirt, green leaves and flowers blurred in the background, sharp focus on his face and kind eyes, natural skin texture, true-to-life colors, candid family photo.",
+    "seed": 12003
+  },
+  {
+    "name": "portrait_beach",
+    "workflow": "Qwen T2I - Portrait 896x1152",
+    "prompt": "iPhone portrait mode photo of a woman with long dark hair at the beach in the late afternoon, gentle breeze moving her hair, white linen shirt, soft warm light, the sea and sky smoothly blurred behind her, sharp focus on her face, natural colors, relaxed happy expression, vacation photo.",
+    "seed": 12004
+  }
+]

@@ -8,6 +8,8 @@
 *.bin
 *.png
 *.jpg
+!/docs/images/*.jpg
+/reddit/
 __pycache__/
 *.pyc
 *.log
